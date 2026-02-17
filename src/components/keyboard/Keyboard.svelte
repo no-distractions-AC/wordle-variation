@@ -4,6 +4,7 @@
 	import { COLS, keys } from "../../utils";
 	import Key from "./Key.svelte";
 
+	export let cols: number = COLS;
 	export let value = "";
 	export let disabled = false;
 	let preventChange = true;
@@ -11,7 +12,7 @@
 	const dispatch = createEventDispatcher();
 
 	function appendValue(char: string) {
-		if (!disabled && value.length < COLS) {
+		if (!disabled && value.length < cols) {
 			dispatch("keystroke", char);
 			value += char;
 		}

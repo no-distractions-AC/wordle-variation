@@ -3,6 +3,7 @@
 	import { COLS } from "../../utils";
 
 	import Tile from "./Tile.svelte";
+	export let cols: number = COLS;
 	export let guesses: number;
 	export let num: number;
 	export let value = "";
@@ -42,7 +43,7 @@
 	data-animation={animation}
 	class:complete={guesses > num}
 >
-	{#each Array(COLS) as _, i}
+	{#each Array(cols) as _, i}
 		<Tile bind:this={tiles[i]} state={state[i]} value={value.charAt(i)} position={i} />
 	{/each}
 </div>

@@ -1,16 +1,18 @@
 <script lang="ts">
-	import { getRowData, words } from "../../utils";
+	import { getRowData, words as defaultWords, COLS } from "../../utils";
 
 	import Row from "./Row.svelte";
 	import ContextMenu from "../widgets/ContextMenu.svelte";
 	import { createEventDispatcher } from "svelte";
 	import { scale } from "svelte/transition";
 
+	export let cols: number = COLS;
 	export let value: string[];
 	export let board: GameBoard;
 	export let guesses: number;
 	export let icon: string;
 	export let tutorial: boolean;
+	export let wordList: { words: string[]; valid: string[]; contains: (word: string) => boolean } = defaultWords;
 	export function shake(row: number) {
 		rows[row].shake();
 	}
@@ -37,9 +39,9 @@
 			showCtx = true;
 			word = guesses > num ? val : "";
 
-			const match = getRowData(num, board);
-			pAns = words.words.filter((w) => match(w)).length;
-			pSols = pAns + words.valid.filter((w) => match(w)).length;
+			const match = getRowData(num, board, cols);
+			pAns = wordList.words.filter((w) => match(w)).length;
+			pSols = pAns + wordList.valid.filter((w) => match(w)).length;
 		}
 	}
 
@@ -75,6 +77,7 @@
 <div class="board" on:touchstart={swipeStart} on:touchend={swipeEnd} on:touchmove|preventDefault>
 	{#each value as _, i}
 		<Row
+			{cols}
 			num={i}
 			{guesses}
 			bind:this={rows[i]}

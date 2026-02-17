@@ -35,16 +35,19 @@
 	} from "../utils";
 	import { letterStates, settings, mode } from "../stores";
 
+	export let cols: number = COLS;
+	export let rows: number = ROWS;
 	export let word: string;
 	export let stats: Stats;
 	export let game: GameState;
 	export let toaster: Toaster;
+	export let wordList: { words: string[]; valid: string[]; contains: (word: string) => boolean } = words;
 
 	setContext("toaster", toaster);
 	const version = getContext<string>("version");
 
 	// implement transition delay on keys
-	const delay = DELAY_INCREMENT * ROWS + 800;
+	const delay = DELAY_INCREMENT * rows + 800;
 
 	let showTutorial = $settings.tutorial === 3;
 	let showSettings = false;
@@ -56,10 +59,10 @@
 	let timer: Timer;
 
 	function submitWord() {
-		if (game.latestWord.length !== COLS) {
+		if (game.latestWord.length !== cols) {
 			toaster.pop("Not enough letters");
 			board.shake(game.guesses);
-		} else if (words.contains(game.latestWord)) {
+		} else if (wordList.contains(game.latestWord)) {
 			if (game.guesses > 0) {
 				const hm = game.checkHardMode();
 				if ($settings.hard[$mode]) {
@@ -83,7 +86,7 @@
 			$letterStates.update(game.lastState, game.lastWord);
 			$letterStates = $letterStates;
 			if (game.lastWord === word) win();
-			else if (game.guesses === ROWS) lose();
+			else if (game.guesses === rows) lose();
 		} else {
 			toaster.pop("Not in word list");
 			board.shake(game.guesses);
@@ -95,7 +98,7 @@
 		game.active = false;
 		setTimeout(
 			() => toaster.pop(PRAISE[game.guesses - 1]),
-			DELAY_INCREMENT * COLS + DELAY_INCREMENT
+			DELAY_INCREMENT * cols + DELAY_INCREMENT
 		);
 		setTimeout(setShowStatsTrue, delay * 1.4);
 		if (!modeData.modes[$mode].historical) {
@@ -124,8 +127,8 @@
 	function reload() {
 		modeData.modes[$mode].historical = false;
 		modeData.modes[$mode].seed = newSeed($mode);
-		game = new GameState($mode, localStorage.getItem(`state-${$mode}`));
-		word = words.words[seededRandomInt(0, words.words.length, modeData.modes[$mode].seed)];
+		game = new GameState($mode, localStorage.getItem(`state-${$mode}`), cols, rows);
+		word = wordList.words[seededRandomInt(0, wordList.words.length, modeData.modes[$mode].seed)];
 		$letterStates = new LetterStates();
 		showStats = false;
 		showRefresh = false;
@@ -157,7 +160,7 @@
 
 <svelte:body on:click={board.hideCtx} on:contextmenu={board.hideCtx} />
 
-<main class:guesses={game.guesses !== 0} style="--rows: {ROWS}; --cols: {COLS}">
+<main class:guesses={game.guesses !== 0} style="--rows: {rows}; --cols: {cols}">
 	<Header
 		bind:showRefresh
 		tutorial={$settings.tutorial === 2}
@@ -169,6 +172,8 @@
 		on:reload={reload}
 	/>
 	<Board
+		{cols}
+		{wordList}
 		bind:this={board}
 		bind:value={game.board.words}
 		tutorial={$settings.tutorial === 1}
@@ -179,11 +184,12 @@
 		on:swipe={onSwipe}
 	/>
 	<Keyboard
+		{cols}
 		on:keystroke={() => {
 			if ($settings.tutorial) $settings.tutorial = 0;
 			board.hideCtx();
 		}}
-		bind:value={game.board.words[game.guesses === ROWS ? 0 : game.guesses]}
+		bind:value={game.board.words[game.guesses === rows ? 0 : game.guesses]}
 		on:submitWord={submitWord}
 		on:esc={() => {
 			showTutorial = false;
